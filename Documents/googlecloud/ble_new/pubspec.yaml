@@ -36,6 +36,7 @@ dependencies:
   provider:
   intl: ^0.16.1
   synchronized: ^2.2.0+2
+  fluttertoast: ^3.0.4
 
 dev_dependencies:
   flutter_test:

@@ -1,16 +1,12 @@
-import 'dart:typed_data';
-
+import 'package:ble_new/model.dart';
 import 'package:ble_new/notifier.dart';
+import 'package:ble_new/pdf_creation/before.dart';
 import 'package:ble_new/pdf_creation/report_pdf.dart';
 import 'package:convert/convert.dart';
-
-
 import 'package:flutter/material.dart' as material;
 import 'package:intl/intl.dart';
-
 import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
-//import 'package:ble/pdf_creation/report_pdf.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:provider/provider.dart';
@@ -28,6 +24,7 @@ List<BluetoothDevice> _connectedDevice=new List<BluetoothDevice>();
 List<BluetoothService> _services;
 BluetoothDevice _selectedDevice;
 String strew="Start";
+List<TempData> tableValues=new List<TempData>();
 
 
 bool seected=false;
@@ -57,6 +54,7 @@ class _MyAppState extends material.State<MyApp> with SingleTickerProviderStateMi
     super.initState();
     //_tabController = new TabController(vsync: this, length: myTabs.length);
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -99,36 +97,16 @@ class _MyAppState extends material.State<MyApp> with SingleTickerProviderStateMi
     );
   }
 }
-
-
-final List<Function> tabs = <Function>[
-
-  //Tab(text: 'Scanner'),
-  //Tab(text: 'Bonded'),
-  //Tab(text: 'Second'),
-];
-
 /// This is the stateless widget that the main application instantiates.
 class MyStatelessWidget extends StatefulWidget {
-  //MyStatelessWidget({Key key}) : super(key: key);
   bool dec;
   MyStatelessWidget({this.dec});
-  //final String title;
-
-
   @override
   _MyStatelessWidgetState createState() => _MyStatelessWidgetState();
 }
 
 class _MyStatelessWidgetState extends State<MyStatelessWidget> {
 
-
-  final List<Function> tabs = <Function>[
-
-    //Tab(text: 'Scanner'),
-    //Tab(text: 'Bonded'),
-    //Tab(text: 'Second'),
-  ];
 
 
   final _writeController = TextEditingController();
@@ -454,91 +432,7 @@ class _Tab2State extends State<Tab2> {
       BluetoothCharacteristic characteristic) {
     List<ButtonTheme> buttons = new List<ButtonTheme>();
 
-    // if (characteristic.properties.read) {
-    //   buttons.add(
-    //     ButtonTheme(
-    //       minWidth: 10,
-    //       height: 30,
-    //       child: Padding(
-    //         padding: const EdgeInsets.symmetric(horizontal: 4),
-    //         child: RaisedButton(
-    //           color: Colors.black54,
-    //           child: Text('  Read   ', style: TextStyle(color: Colors.white)),
-    //           onPressed: () async {
-    //             var sub = characteristic.value.listen((value) {
-    //
-    //               print(characteristic.value.toString()+"  this is the read character");
-    //               if(value.toString()=="00001800-0000-1000-8000-00805f9b34fb")
-    //                 mainDevice=characteristic;
-    //               setState(() {
-    //                 print(value);
-    //                 readValues[characteristic.uuid] = value.toString();
-    //               });
-    //             });
-    //             await characteristic.read();
-    //             sub.cancel();
-    //           },
-    //         ),
-    //       ),
-    //     ),
-    //   );
-    // }
-    // if (characteristic.properties.write) {
-    //   buttons.add(
-    //     ButtonTheme(
-    //       minWidth: 10,
-    //       height: 30,
-    //       child: Padding(
-    //         padding: const EdgeInsets.symmetric(horizontal: 4),
-    //         child: RaisedButton(
-    //           color: Colors.black54,
-    //           child: Text('  Write   ', style: TextStyle(color: Colors.white)),
-    //           onPressed: () async {
-    //             await showDialog(
-    //                 context: context,
-    //                 builder: (BuildContext context) {
-    //                   return AlertDialog(
-    //                     title: Text("Choose"),
-    //                     // content: Row(
-    //                     //   children: <Widget>[
-    //                     //     // Expanded(
-    //                     //     //   child: TextField(
-    //                     //     //     controller: _writeController,
-    //                     //     //   ),
-    //                     //     // ),
-    //                     //   ],
-    //                     // ),
-    //                     actions: <Widget>[
-    //                       FlatButton(
-    //                         child: Text("Start"),
-    //                         onPressed: () {
-    //                           characteristic.write(
-    //                               utf8.encode("3"));
-    //                           Navigator.pop(context);
-    //                         },
-    //                       ),
-    //                       FlatButton(
-    //                         child: Text("Stop"),
-    //                         onPressed: () {
-    //                           characteristic.write([0x00]);
-    //                           Navigator.pop(context);
-    //                         },
-    //                       ),
-    //                       FlatButton(
-    //                         child: Text("Cancel"),
-    //                         onPressed: () {
-    //                           Navigator.pop(context);
-    //                         },
-    //                       ),
-    //                     ],
-    //                   );
-    //                 });
-    //           },
-    //         ),
-    //       ),
-    //     ),
-    //   );
-    // }
+
     if (characteristic.properties.notify) {
       buttons.add(
         ButtonTheme(
@@ -558,7 +452,7 @@ class _Tab2State extends State<Tab2> {
                 if(characteristic.isNotifying==false) {
                   await characteristic.setNotifyValue(true);
                   characteristic.write(
-                      utf8.encode("3"));
+                    await   utf8.encode("3"));
                   setState(() {
                     strew="Stop";
                   });
@@ -580,11 +474,21 @@ class _Tab2State extends State<Tab2> {
                   });
                   characteristic.value.listen((value) async {
                     var value1 = hex.encode(value);
+                    String value2=ascii.decode(value);
+                       print("this is for asciii:"+value2);
                     print("The values of coverted list" + value1.toString());
                     print("notify Values");
+                    TempData fr=new TempData();
+                    if(value2.length>15)
+                     fr=TempData.toVal(
+                       (tableValues!=null)?(tableValues.length+1).toString():1.toString(), value2.substring(3,13), value2.substring(14,19), value2.substring(0,2)
+                    );
                     print(value);
                     setState(() {
-                      readValues[characteristic.uuid] = value1;
+
+                      if(value2.length>15)
+                        tableValues.add(fr);
+                      readValues[characteristic.uuid] = value2;
                       print("notify Values");
                       print(value);
                       indexOfButton = characteristic.uuid;
@@ -615,42 +519,7 @@ class _Tab2State extends State<Tab2> {
         ),
       );
     }
-    // if (characteristic.properties.indicate) {
-    //   buttons.add(
-    //     ButtonTheme(
-    //       minWidth: 1,
-    //       height: 30,
-    //       child: Padding(
-    //         padding: const EdgeInsets.symmetric(horizontal: 4),
-    //         child: RaisedButton(
-    //           color: Colors.black54,
-    //           child: Text('Indicate', style: TextStyle(color: Colors.white)),
-    //           onPressed: () async {
-    //             characteristic.value.listen((value) {
-    //               setState(() {
-    //                 readValues[characteristic.uuid] = value.toString();
-    //                 print(value);
-    //                 indexOfButton=characteristic.uuid;
-    //                 //for(int i=0;i<value.length;i++)
-    //                 if(value.length<3)
-    //                 {
-    //                   value.add(23);
-    //                   value.add(53);
-    //                   value.add(78);
-    //                 }
-    //                 if(value!=null)
-    //                   data.add(value);
-    //                 print("\n values in data"+data.toString());
-    //               });
-    //
-    //             });
-    //             await characteristic.setNotifyValue(true);
-    //           },
-    //         ),
-    //       ),
-    //     ),
-    //   );
-    // }
+
 
     return buttons;
   }
@@ -697,7 +566,7 @@ grt()async{
                         children: <Widget>[
                           Text("Date: ",
                               style: TextStyle(fontWeight: FontWeight.bold)),
-                          Text(readValues[characteristic.uuid]!=null?readValues[characteristic.uuid].length>37?readValues[characteristic.uuid].toString().substring(12,15)+"":"null":"null",
+                          Text(readValues[characteristic.uuid]!=null?readValues[characteristic.uuid].length>2?readValues[characteristic.uuid].toString().substring(3,13)+"":"null":"null",
                               style: TextStyle()),
 
                         ],
@@ -709,7 +578,7 @@ grt()async{
                         children: <Widget>[
                           Text("Time: ",
                               style: TextStyle(fontWeight: FontWeight.bold)),
-                          Text(readValues[characteristic.uuid]!=null?readValues[characteristic.uuid].length>37?readValues[characteristic.uuid].toString().substring(36,38)+"":"null":"null",
+                          Text(readValues[characteristic.uuid]!=null?readValues[characteristic.uuid].length>2?readValues[characteristic.uuid].toString().substring(14,19)+" "+"pm":"null":"null",
                               style: TextStyle()),
                         ],
                       ),
@@ -718,31 +587,25 @@ grt()async{
                       padding: EdgeInsets.only(top:10,left: 15,),
                       child: Row(
                         children: <Widget>[
-                          Text("Temperature: ",
+                          Text("Temperature:",
                               style: TextStyle(fontWeight: FontWeight.bold)),
-                          Text(readValues[characteristic.uuid]!=null?readValues[characteristic.uuid].length>37?readValues[characteristic.uuid].toString().substring(37,39)+" dgree":"null":"null",
+                          Text(readValues[characteristic.uuid]!=null?readValues[characteristic.uuid].length>2?readValues[characteristic.uuid].toString().substring(0,2)+" dgree":"null":"null",
                               style: TextStyle()),
                         ],
                       ),
                     ),
+                    // material.Padding(
+                    //   padding: EdgeInsets.only(top:10,left: 15,),
+                    //   child: Row(
+                    //     children: <Widget>[
+                    //
+                    //       Text(readValues[characteristic.uuid]!=null?readValues[characteristic.uuid].length>2?readValues[characteristic.uuid].toString():"null":"null",
+                    //           style: TextStyle()),
+                    //     ],
+                    //   ),
+                    // ),
 
-                    Row(
-                      children: <Widget>[
-                        // material.Padding(
-                        //padding: EdgeInsets.only(left:0.0),
-                        //child:
-                        Container(
-                          //height: 100,
-                          child: Text(
-                            //'Value: ' +
-                            readValues[characteristic.uuid].toString() +
-                                "\n", style: material.TextStyle(fontSize: 10),
-                            //+widget.readValues[characteristic.uuid].length.toString()
-                          ),
-                        ),
-                        //),
-                      ],
-                    ),
+
                     material.Padding(
                       padding: const EdgeInsets.all(15.0),
                       child: Row(
@@ -751,50 +614,7 @@ grt()async{
                         ],
                       ),
                     ),
-                    // ButtonTheme(
-                    //   minWidth: 1,
-                    //   height: 30,
-                    //   child: Padding(
-                    //     padding: const EdgeInsets.symmetric(horizontal: 4),
-                    //     child: RaisedButton(
-                    //       color: Colors.black54,
-                    //       child: Text('Start', style: TextStyle(color: Colors.white)),
-                    //       onPressed: () async {
-                    //         //await characteristic.setNotifyValue(true);
-                    //         Future.delayed(new Duration(seconds: 2), () { character.setNotifyValue(true); });
-                    //         print("chceking if isNotifying or not");
-                    //         print(characteristic.isNotifying);
-                    //         characteristic.value.listen((value) {
-                    //           var value1 = hex.encode(value);
-                    //           print("The values of coverted list" + value1.toString());
-                    //           print("notify Values");
-                    //           print(value);
-                    //           setState(() {
-                    //             readValues[characteristic.uuid] = value1;
-                    //             print("notify Values");
-                    //             print(value);
-                    //             indexOfButton = characteristic.uuid;
-                    //             //for(int i=0;i<value.length;i++)
-                    //             // if(value.length<3)
-                    //             // {
-                    //             //   value.add(23);
-                    //             //   value.add(53);
-                    //             //   value.add(78);
-                    //             // }
-                    //
-                    //           });
-                    //           characteristic.write(
-                    //               utf8.encode("3"));
-                    //           // if (!(value.length <= 0))
-                    //           //   await data.add(value);
-                    //           // print("\n values in data" + data.toString());
-                    //
-                    //         });
-                    //
-                    //       },
-                    //     ),
-                    //   ),
-                    // ),
+
                     //Divider(),
                   ],
                 ),
@@ -910,64 +730,8 @@ grt()async{
               ),
               material.SizedBox(width: 30,),
 
-              // FlatButton(
-              //     height: 40,
-              //     minWidth:100,
-              //     color: Colors.white,
-              //     onPressed: () async{
-              //       print(mainDevice.value.toString());
-              //       var sub = mainDevice.value.listen((value) {
-              //
-              //         print(mainDevice.value.toString()+" debugging");
-              //         setState(() {
-              //           print(value);
-              //           readValues[mainDevice.uuid] = value.toString();
-              //         });
-              //       });
-              //       await mainDevice.read();
-              //       sub.cancel();
-              //     }, child: Text('Start',style: material.TextStyle(color: Colors.black),)
-              // ),
+
               material.SizedBox(width: 30,),
-              // material.FloatingActionButton(onPressed: () async {
-              //   List<List<int>> data2 = new List<List<int>>();
-              //   print(data.toString());
-              //   for (int i = 0; i < data.length; i++) {
-              //     List<int> data3 = new List<int>();
-              //     for (int j = 0; j < 3; j++) {
-              //       await data3.add(data[i][j]);
-              //       //data2[i][j]=widget.data[i][j];
-              //     }
-              //     data2.add(data3);
-              //   }
-              //   print(data[1].toString());
-              //   reportView(context, data2);
-              // },
-              //   child: Text("Get Report",style: material.TextStyle(color: Colors.white),),
-              // ),
-              // FlatButton(
-              //     height: 40,
-              //     minWidth: 1,
-              //     color: Colors.black54,
-              //     onPressed: () async{
-              //       List<List<int>> data2 =new List<List<int>>();
-              //       print(data.toString());
-              //       for(int i=0;i<data.length;i++)
-              //       {
-              //         List<int> data3=new List<int>();
-              //         for(int j=0;j<3;j++)
-              //         {
-              //           await data3.add(data[i][j]);
-              //           //data2[i][j]=widget.data[i][j];
-              //         }
-              //         data2.add(data3);
-              //       }
-              //       print(data[1].toString());
-              //       reportView(context,data2);
-              //     }, child: Text("Get Report",style: material.TextStyle(color: Colors.white),)
-              // ),
-
-
             ],
           ),
 
@@ -1000,18 +764,19 @@ grt()async{
         ],
       ),
       floatingActionButton: FloatingActionButton(onPressed: () async {
-        List<List<int>> data2 = new List<List<int>>();
-        print(data.toString());
-        for (int i = 0; i < data.length; i++) {
-          List<int> data3 = new List<int>();
-          for (int j = 0; j < 3; j++) {
-            await data3.add(data[i][j]);
-            //data2[i][j]=widget.data[i][j];
-          }
-          data2.add(data3);
-        }
-        print(data[1].toString());
-        reportView(context, data2);
+        // List<List<int>> data2 = new List<List<int>>();
+        // print(data.toString());
+        // for (int i = 0; i < data.length; i++) {
+        //   List<int> data3 = new List<int>();
+        //   for (int j = 0; j < 3; j++) {
+        //     await data3.add(data[i][j]);
+        //     //data2[i][j]=widget.data[i][j];
+        //   }
+        //   data2.add(data3);
+        // }
+       // print(data[1].toString());
+        //reportView(context);
+        Navigator.of(context).push(MaterialPageRoute(builder: (context) => beforeFunc()));
       },
         child: Icon(Icons.download_sharp),
         //Text("  Get PDF",style: material.TextStyle(color: Colors.white),),
@@ -1060,9 +825,7 @@ Widget devinfo(){
               ],
             ),
           ),
-          // Text("Name: "+ _selectedDevice.name.toString()),
-          // Text("Id: "+ _selectedDevice.id.toString()),
-          // Text("Function: "+ "Measure the temperature"),
+
         ],
       )
     );
@@ -1102,7 +865,8 @@ Widget devinfo(){
             children: [
              // MyStatelessWidget(dec:true),
               devinfo(),
-              _dataOfDevice(),
+              //_dataOfDevice(),
+              beforeFunc(tables1: tableValues,),
               _buildConnectDeviceView(),
              // ConnectedDevice(),
             ],
@@ -1113,11 +877,6 @@ Widget devinfo(){
   }
 
 
-  // Widget build(BuildContext context) {
-  //   return Scaffold(
-  //     body: _connectedDevice != null?_buildConnectDeviceView():Container(child:Text("Empty"))
-  //   );
-  //     //
-  // }
+
 }
 
